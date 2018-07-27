@@ -39,6 +39,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        Cursor.visible = false;
+
         gameButtons = new List<GameObject>();
         cubeButtons = new List<GameObject>();
 
