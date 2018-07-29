@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     List<GameObject> cubeButtons;
     public Camera camera;
     int beepCount = 1;
+    int round = 1;
+    int record = 0;
     List<int> beeps = new List<int>();
     List<int> playerBeeps;
     System.Random rg;
@@ -23,6 +25,8 @@ public class GameManager : MonoBehaviour
     Button beginRayCast;
     public Collider coll;
     public Text stepText;
+    public Text roundText;
+    public Text recordText;
     float timeForRestart = 5;
 
     public float minX = -360.0f;
@@ -60,6 +64,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator SimonSays() {
         inputEnabled = false;
+        roundText.text = "Round " + round;
         stepText.text = "Listen";
         stepText.color = Color.red;
         rg = new System.Random((int)System.DateTime.Now.Millisecond);
@@ -178,6 +183,7 @@ public class GameManager : MonoBehaviour
         }
 
         if (beeps.Count == playerBeeps.Count) {
+            round++;
             StartCoroutine(SimonSays());
         }
     }
@@ -188,6 +194,13 @@ public class GameManager : MonoBehaviour
         inputEnabled = false;
         infoText.text = "Game Over !";
         stepText.text = "";
+
+        if (round > 1 && round > record)
+        {
+            record = round;
+            recordText.text = "Best : " + record;
+        }
+        round = 1;
     }
 
     delegate void del1(Button i);
