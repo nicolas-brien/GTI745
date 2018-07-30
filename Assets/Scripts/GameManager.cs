@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,8 +15,10 @@ public class GameManager : MonoBehaviour
     List<GameObject> gameButtons;
     List<GameObject> cubeButtons;
     public Camera camera;
+    public GameObject Cylinder;
     int beepCount = 1;
     int round = 1;
+    int score = 0;
     int record = 0;
     List<int> beeps = new List<int>();
     List<int> playerBeeps;
@@ -26,8 +29,13 @@ public class GameManager : MonoBehaviour
     public Collider coll;
     public Text stepText;
     public Text roundText;
+    public Text scoreText;
     public Text recordText;
     float timeForRestart = 5;
+
+    public GameObject MenuPanel;
+    public Button ResumeButton;
+    bool menuActive = false;
 
     public float minX = -360.0f;
     public float maxX = 360.0f;
@@ -43,6 +51,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        HideMenu();
         Cursor.visible = false;
 
         gameButtons = new List<GameObject>();
@@ -181,6 +190,11 @@ public class GameManager : MonoBehaviour
             GameOver();
             return;
         }
+        else
+        {
+            score++;
+            UpdateScoreText(score);
+        }
 
         if (beeps.Count == playerBeeps.Count) {
             round++;
@@ -195,51 +209,105 @@ public class GameManager : MonoBehaviour
         infoText.text = "Game Over !";
         stepText.text = "";
 
-        if (round > 1 && round > record)
+        if (score > record)
         {
-            record = round;
-            recordText.text = "Best : " + record;
+            record = score;
+            UpdateRecordText(record);
         }
         round = 1;
+        score = 0;
+        UpdateScoreText(score);
+    }
+
+    void UpdateScoreText(int value)
+    {
+        scoreText.text = "Current score : " + value;
+    }
+
+    void UpdateRecordText(int value)
+    {
+        recordText.text = "Best score : " + value;
+    }
+
+    public void HideMenu()
+    {
+        menuActive = false;
+        MenuPanel.SetActive(false);
+        Cylinder.SetActive(true);
+    }
+
+    public void ShowMenu()
+    {
+        menuActive = true;
+        MenuPanel.SetActive(true);
+        ResumeButton.Select();
+        Cylinder.SetActive(false);
+    }
+
+    public void ExitToMenu()
+    {
+        SceneManager.LoadScene("Main Menu");
+    }
+
+    public void ExitToDesktop()
+    {
+        Application.Quit();
     }
 
     delegate void del1(Button i);
     delegate void del2(del1 i);
     private void Update()
     {
-        del2 for_collided_button = (del1 d) => {
-            var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-            RaycastHit hit;
-            
-            if (Physics.Raycast(ray, out hit))
+        if (!menuActive)
+        {
+            del2 for_collided_button = (del1 d) =>
             {
-                d(hit.collider.gameObject.GetComponent<Button>());
-            }
-        };
+                var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+                RaycastHit hit;
 
-        if (Input.GetButtonDown("Jump"))
-        {
-            for_collided_button((Button b) => beginRayCast = b);
-        }
-        else if (beginRayCast)
-        {
-
-            for_collided_button((Button b) => {
-                if (b == beginRayCast)
+                if (Physics.Raycast(ray, out hit))
                 {
-                    b.onClick.Invoke();
+                    d(hit.collider.gameObject.GetComponent<Button>());
                 }
-            });
+            };
 
-            beginRayCast = null;
-        }
-
-        if (gameOver)
-        {
-            timeForRestart -= Time.deltaTime;
-            if(timeForRestart < 0)
+            if (Input.GetButtonDown("Menu"))
             {
-                restart();
+                ShowMenu();
+            }
+
+            if (Input.GetButtonDown("Jump"))
+            {
+                for_collided_button((Button b) => beginRayCast = b);
+            }
+            else if (beginRayCast)
+            {
+
+                for_collided_button((Button b) =>
+                {
+                    if (b == beginRayCast)
+                    {
+                        b.onClick.Invoke();
+                    }
+                });
+
+                beginRayCast = null;
+            }
+
+            if (gameOver)
+            {
+                timeForRestart -= Time.deltaTime;
+                if (timeForRestart < 0)
+                {
+                    restart();
+                }
+            }
+        }
+        else
+        {
+            if (Input.GetButtonDown("Menu"))
+            {
+                HideMenu();
             }
         }
 
